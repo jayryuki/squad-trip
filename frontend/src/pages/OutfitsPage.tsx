@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -183,7 +184,10 @@ export default function OutfitsPage() {
                   </Button>
                 </div>
                 <CardContent className="p-3">
-                  <p className="font-medium truncate">{outfit.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium truncate">{outfit.name}</p>
+                    <CreatorTag creatorId={outfit.created_by_user_id} />
+                  </div>
                 </CardContent>
               </Card>
             ))}

@@ -1,30 +1,78 @@
-# React + TypeScript + Vite
+# Frontend - Squad Trip
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-based frontend for the Squad Trip application.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework:** React 18
+- **Build Tool:** Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **UI Components:** shadcn/ui
+- **Routing:** React Router v6
+- **State Management:** Zustand
+- **Data Fetching:** TanStack React Query (React Query)
+- **HTTP Client:** Axios
+- **Maps:** Leaflet + React Leaflet
+- **Icons:** Lucide React
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```
+frontend/
+├── public/                 # Static assets
+├── src/
+│   ├── main.tsx           # Entry point
+│   ├── App.tsx           # Root component
+│   ├── index.css         # Global styles (Tailwind)
+│   ├── App.css          # App-specific styles
+│   ├── router/          # Routing configuration
+│   ├── lib/             # Utilities and API client
+│   ├── stores/          # Zustand state stores
+│   ├── components/      # React components
+│   ├── pages/          # Page components
+│   ├── hooks/          # Custom hooks (currently empty)
+│   ├── types/          # TypeScript types (currently empty)
+│   ├── features/       # Feature modules (currently empty)
+│   └── assets/         # Local assets
+├── package.json
+├── vite.config.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── postcss.config.js
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## Key Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| react-router-dom | Client-side routing |
+| zustand | Lightweight state management |
+| @tanstack/react-query | Server state/cache management |
+| axios | HTTP client |
+| leaflet, react-leaflet | Map integration |
+| lucide-react | Icon library |
+| sonner | Toast notifications |
+| clsx, tailwind-merge | Class name utilities |
+
+## Getting Started
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The app runs at `http://localhost:5173` by default.
+
+## Features
+
+The frontend implements 18 pages:
+
+| Category | Pages |
+|----------|-------|
+| Auth | Setup, Login, Register, Join Trip |
+| Main | Trips List, Trip Dashboard, User Profile |
+| Trip Features | Map, Itinerary, Roles, Packing, Budget, Outfits, Moodboard, Chat, Polls, Weather, Documents, Safety, Photos |
+
+See `src/` folder for detailed module documentation.

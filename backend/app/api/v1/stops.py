@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -29,6 +29,10 @@ class StopUpdateRequest(BaseModel):
     order_index: Optional[int] = None
 
 
+class ReorderRequest(BaseModel):
+    stop_ids: list[int]
+
+
 class StopResponse(BaseModel):
     id: int
     name: str
@@ -37,6 +41,7 @@ class StopResponse(BaseModel):
     longitude: Optional[float]
     notes: Optional[str]
     order_index: int
+    creator_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -63,13 +68,19 @@ async def create_stop(
     member: TripMember = Depends(get_trip_member),
 ):
     result = await db.execute(
-        select(Stop).where(Stop.trip_id == trip_id).order_by(Stop.order_index.desc())
+        select(Stop.order_index)
+        .where(Stop.trip_id == trip_id)
+        .order_by(Stop.order_index)
     )
-    last_stop = result.scalars().first()
-    next_order = (last_stop.order_index + 1) if last_stop else 0
+    existing_indices = set(result.scalars().all())
+
+    next_order = 0
+    while next_order in existing_indices:
+        next_order += 1
 
     stop = Stop(
         trip_id=trip_id,
+        creator_id=member.user_id,
         name=req.name,
         address=req.address,
         latitude=req.latitude,
@@ -130,7 +141,16 @@ async def delete_stop(
     if not stop:
         raise HTTPException(status_code=404, detail="Stop not found")
 
+    deleted_order = stop.order_index
     await db.delete(stop)
+
+    remaining = await db.execute(
+        select(Stop).where(Stop.trip_id == trip_id).order_by(Stop.order_index)
+    )
+    remaining_stops = remaining.scalars().all()
+    for idx, s in enumerate(remaining_stops):
+        s.order_index = idx
+
     await db.commit()
     return {"message": "Stop deleted"}
 
@@ -138,11 +158,11 @@ async def delete_stop(
 @router.put("/reorder")
 async def reorder_stops(
     trip_id: int,
-    stop_ids: list[int],
+    req: ReorderRequest = Body(),
     db: AsyncSession = Depends(get_db),
     member: TripMember = Depends(get_trip_member),
 ):
-    for index, stop_id in enumerate(stop_ids):
+    for index, stop_id in enumerate(req.stop_ids):
         result = await db.execute(
             select(Stop).where(Stop.id == stop_id, Stop.trip_id == trip_id)
         )

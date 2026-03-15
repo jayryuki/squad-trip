@@ -4,12 +4,14 @@ from datetime import datetime
 import enum
 from app.core.database import Base
 
+
 class TripType(str, enum.Enum):
     ROAD_TRIP = "road_trip"
     VACATION = "vacation"
     CAMPING = "camping"
     CITY_BREAK = "city_break"
     OTHER = "other"
+
 
 class Trip(Base):
     __tablename__ = "trips"
@@ -23,8 +25,9 @@ class Trip(Base):
     currency = Column(String, default="USD")
     cover_image_url = Column(String, nullable=True)
     invite_code = Column(String, unique=True, index=True)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     members = relationship("TripMember", back_populates="trip")
     stops = relationship("Stop", back_populates="trip")
     itinerary_items = relationship("ItineraryItem", back_populates="trip")
@@ -39,14 +42,20 @@ class Trip(Base):
     safety_info = relationship("SafetyInfo", back_populates="trip")
     photos = relationship("Photo", back_populates="trip")
 
+
 class TripMember(Base):
     __tablename__ = "trip_members"
 
     id = Column(Integer, primary_key=True, index=True)
     trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role = Column(String, default="member")  # admin, member
+    role = Column(String, default="member")
+    stops_count = Column(Integer, default=0)
+    itinerary_count = Column(Integer, default=0)
+    packing_count = Column(Integer, default=0)
+    expenses_count = Column(Integer, default=0)
+    polls_count = Column(Integer, default=0)
     joined_at = Column(DateTime, default=datetime.utcnow)
-    
+
     trip = relationship("Trip", back_populates="members")
     user = relationship("User", back_populates="trips")

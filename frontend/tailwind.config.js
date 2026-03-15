@@ -23,10 +23,20 @@ export default {
           raised:  "hsl(var(--surface-raised))",
           overlay: "hsl(var(--surface-overlay))",
         },
+        background: "hsl(var(--background))",
+        foreground: {
+          DEFAULT: "hsl(var(--foreground))",
+          muted: "hsl(var(--foreground-muted))",
+          subtle: "hsl(var(--foreground-subtle))",
+        },
         border: {
           DEFAULT: "hsl(var(--border))",
           strong:  "hsl(var(--border-strong))",
         },
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        danger: "hsl(var(--danger))",
+        info: "hsl(var(--info))",
       },
       borderRadius: {
         sm:   "var(--radius-sm)",

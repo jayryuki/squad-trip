@@ -12,3 +12,4 @@ from app.models.poll import Poll
 from app.models.document import Document
 from app.models.safety import SafetyInfo
 from app.models.photo import Photo
+from app.models.badge import Badge, UserBadge

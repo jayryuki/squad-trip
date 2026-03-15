@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -166,7 +167,10 @@ export default function PollsPage() {
                 <Card key={poll.id} className="p-4">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-lg">{poll.question}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{poll.question}</h3>
+                        <CreatorTag creatorId={poll.created_by_user_id} />
+                      </div>
                       <p className="text-sm text-foreground-muted">{totalVotes} votes</p>
                     </div>
                     <div className="flex gap-2">

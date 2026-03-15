@@ -1,5 +1,7 @@
 # Squad Trip
 
+> **IMPORTANT:** Read all README.md files in all folders to understand the codebase so you don't have to go line by line.
+
 A full-stack trip planning application for groups. Plan trips together with features for mapping, itinerary, packing lists, budgets, chat, and more.
 
 ## Tech Stack

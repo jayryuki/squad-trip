@@ -37,6 +37,7 @@ class PackingItemResponse(BaseModel):
     is_packed: bool
     assigned_user_id: Optional[int]
     is_shared: bool
+    creator_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -62,6 +63,7 @@ async def create_packing_item(
 ):
     item = PackingItem(
         trip_id=trip_id,
+        creator_id=member.user_id,
         name=req.name,
         category=req.category,
         quantity=req.quantity,

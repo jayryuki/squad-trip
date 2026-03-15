@@ -90,6 +90,7 @@ async def create_trip(
         end_date=req.end_date,
         currency=req.currency,
         invite_code=uuid.uuid4().hex[:8].upper(),
+        created_by_user_id=current_user.id,
     )
     db.add(trip)
     await db.commit()

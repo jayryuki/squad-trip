@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Map, Calendar, Users, Luggage, DollarSign, Shirt, Images, MessageSquare, Vote, Cloud, FileText, Shield, Camera, Loader2, Share2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PageWrapper from "@/components/layout/PageWrapper"
+import FeatureCard from "@/components/common/FeatureCard"
 import api from "@/lib/api"
 
 const features = [
@@ -71,14 +72,13 @@ export default function TripDashboardPage() {
           <h2 className="text-lg font-display font-semibold mb-3">Trip Features</h2>
           <div className="grid grid-cols-3 gap-3">
             {features.map((feature) => (
-              <div 
+              <FeatureCard 
                 key={feature.path}
-                className="cursor-pointer hover:border-border-strong hover:bg-surface-raised transition-all text-center py-4 border border-border bg-surface rounded-lg"
+                icon={feature.icon}
+                label={feature.label}
+                color={feature.color}
                 onClick={() => navigate(`/trips/${tripId}/${feature.path}`)}
-              >
-                <feature.icon className={`size-6 mx-auto mb-2 ${feature.color}`} />
-                <span className="text-xs font-medium">{feature.label}</span>
-              </div>
+              />
             ))}
           </div>
         </div>

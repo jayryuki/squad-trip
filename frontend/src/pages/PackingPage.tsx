@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -18,6 +19,7 @@ interface PackingItem {
   is_packed: boolean
   assigned_user_id: number | null
   is_shared: boolean
+  creator_id: number | null
 }
 
 const CATEGORIES = ["clothing", "toiletries", "electronics", "documents", "miscellaneous"]
@@ -34,8 +36,8 @@ export default function PackingPage() {
   })
 
   const { data: items, isLoading } = useQuery<PackingItem[]>({
-    queryKey: ["tripMembers", tripId],
-    queryFn: () => api.get(`/trips/${tripId}/members`).then((r) => r.data),
+    queryKey: ["packing", tripId],
+    queryFn: () => api.get(`/trips/${tripId}/packing`).then((r) => r.data),
   })
 
   const createItem = useMutation({
@@ -193,7 +195,10 @@ export default function PackingPage() {
                           {item.is_packed && <Check className="size-4 text-white" />}
                         </div>
                         <div>
-                          <p className={item.is_packed ? "line-through" : ""}>{item.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className={item.is_packed ? "line-through" : ""}>{item.name}</p>
+                            <CreatorTag creatorId={item.creator_id} />
+                          </div>
                           <p className="text-xs text-foreground-muted">
                             Qty: {item.quantity} · {item.is_shared ? "Shared" : "Personal"}
                           </p>

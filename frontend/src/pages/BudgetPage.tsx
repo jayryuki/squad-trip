@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -16,6 +17,7 @@ interface Expense {
   amount: number
   currency: string
   paid_by_user_id: number
+  creator_id: number | null
   split_type: string
   category: string | null
 }
@@ -222,7 +224,10 @@ export default function BudgetPage() {
               <Card key={expense.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium">{expense.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">{expense.title}</h3>
+                      <CreatorTag creatorId={expense.creator_id} />
+                    </div>
                     <p className="text-sm text-foreground-muted">
                       Paid by {getMemberName(expense.paid_by_user_id)} ·{" "}
                       <span className="capitalize">{expense.category || "other"}</span>

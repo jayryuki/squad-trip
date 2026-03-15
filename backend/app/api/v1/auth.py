@@ -65,6 +65,7 @@ async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)):
                 "username": user.username,
                 "display_name": user.display_name,
                 "avatar_url": user.avatar_url,
+                "emoji": user.emoji,
             },
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -98,6 +99,7 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
                 "username": user.username,
                 "display_name": user.display_name,
                 "avatar_url": user.avatar_url,
+                "emoji": user.emoji,
             },
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -143,4 +145,5 @@ async def get_me(
         "username": user.username,
         "display_name": user.display_name,
         "avatar_url": user.avatar_url,
+        "emoji": user.emoji,
     }

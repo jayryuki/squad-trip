@@ -2,7 +2,7 @@ import { NavLink, useLocation, useParams } from "react-router-dom"
 import { 
   Home, Map, Calendar, Users, Luggage, DollarSign, 
   Shirt, Images, MessageSquare, Vote, Cloud, FileText, 
-  Shield, Camera, LogOut 
+  Shield, Camera, LogOut, User 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { authStore } from "@/stores/authStore"
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 
 const mainNav = [
   { to: "/", icon: Home, label: "My Trips" },
+  { to: "/profile", icon: User, label: "Profile" },
 ]
 
 const tripNav = [

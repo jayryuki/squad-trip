@@ -156,6 +156,7 @@ This document tracks the progress of building out the Squad Trip application. Th
 
 ### 4.1 Map Page (`/trips/:tripId/map`)
 - Display stops on a Leaflet map
+- Auto-fit map to show all stops in view
 - Add/remove/reorder stops
 - Add stop form: name, address, latitude, longitude, notes
 

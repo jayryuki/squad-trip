@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
 import api from "@/lib/api"
 import { toast } from "sonner"
 
@@ -167,9 +168,12 @@ export default function MoodboardPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                {item.caption && (
-                  <p className="mt-1 text-sm text-foreground-muted truncate">{item.caption}</p>
-                )}
+                <div className="mt-1 flex items-center justify-between">
+                  {item.caption && (
+                    <p className="text-sm text-foreground-muted truncate flex-1">{item.caption}</p>
+                  )}
+                  <CreatorTag creatorId={item.created_by_user_id} />
+                </div>
                 <Button
                   variant="destructive"
                   size="sm"

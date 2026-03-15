@@ -36,6 +36,16 @@ const router = createBrowserRouter([
           Component: (await import("@/pages/TripsListPage")).default 
         }) 
       },
+      { path: "/profile", 
+        lazy: async () => ({ 
+          Component: (await import("@/pages/UserProfilePage")).default 
+        }) 
+      },
+      { path: "/profile/:userId", 
+        lazy: async () => ({ 
+          Component: (await import("@/pages/UserProfilePage")).default 
+        }) 
+      },
       { path: "/trips/:tripId", 
         lazy: async () => ({ 
           Component: (await import("@/pages/TripDashboardPage")).default 

@@ -15,11 +15,15 @@ from app.api.v1 import (
     documents,
     safety,
     photos,
+    users,
+    badges,
 )
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(users.router, tags=["users"])
+api_router.include_router(badges.router, tags=["badges"])
 api_router.include_router(trips.router, prefix="/trips", tags=["trips"])
 api_router.include_router(stops.router, prefix="/trips/{trip_id}/stops", tags=["stops"])
 api_router.include_router(

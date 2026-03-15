@@ -38,6 +38,7 @@ class ExpenseResponse(BaseModel):
     amount: float
     currency: str
     paid_by_user_id: int
+    creator_id: Optional[int] = None
     split_type: str
     split_details: Optional[str]
     category: Optional[str]
@@ -100,6 +101,7 @@ async def create_expense(
 ):
     expense = Expense(
         trip_id=trip_id,
+        creator_id=member.user_id,
         title=req.title,
         amount=req.amount,
         currency=req.currency,

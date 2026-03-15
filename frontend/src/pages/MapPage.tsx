@@ -8,10 +8,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import PageWrapper from "@/components/layout/PageWrapper"
+import { CreatorTag } from "@/components/common/CreatorTag"
+import { StopForm } from "@/components/common/StopForm"
 import api from "@/lib/api"
 import { toast } from "sonner"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 const markerIcon = (orderIndex: number) => L.divIcon({
   className: "custom-marker",
@@ -45,6 +64,65 @@ interface Stop {
   longitude: number | null
   notes: string | null
   order_index: number
+  creator_id: number | null
+}
+
+function SortableStop({
+  stop,
+  onEdit,
+  onDelete,
+}: {
+  stop: Stop
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: stop.id,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  }
+
+  return (
+    <Card ref={setNodeRef} style={style} className="p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing"
+            style={{ background: "none", border: "none", padding: 0 }}
+          >
+            <GripVertical className="size-4 text-foreground-muted" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium">{stop.name}</h3>
+              <CreatorTag creatorId={stop.creator_id} />
+            </div>
+            {stop.address && <p className="text-sm text-foreground-muted">{stop.address}</p>}
+            {!stop.latitude && !stop.longitude && (
+              <p className="text-xs text-amber-500 mt-1">No coordinates - click edit to add</p>
+            )}
+            {stop.notes && <p className="text-sm text-foreground-muted mt-1">{stop.notes}</p>}
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            <Pencil className="size-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onDelete}>
+            <Trash2 className="size-4 text-danger" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
 }
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -58,9 +136,19 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   return null
 }
 
-function MapUpdater({ center }: { center: [number, number] }) {
+function MapBoundsUpdater({ stops }: { stops: Stop[] }) {
   const map = useMap()
-  map.setView(center, map.getZoom())
+
+  React.useEffect(() => {
+    const validStops = stops.filter((s) => s.latitude != null && s.longitude != null)
+    if (validStops.length > 0) {
+      const bounds = L.latLngBounds(
+        validStops.map((s) => [s.latitude!, s.longitude!] as [number, number])
+      )
+      map.fitBounds(bounds, { padding: [50, 50] })
+    }
+  }, [map, stops])
+
   return null
 }
 
@@ -70,13 +158,6 @@ export default function MapPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [editingStop, setEditingStop] = useState<Stop | null>(null)
-  const [newStop, setNewStop] = useState({
-    name: "",
-    address: "",
-    latitude: "",
-    longitude: "",
-    notes: "",
-  })
 
   const { data: stops, isLoading } = useQuery<Stop[]>({
     queryKey: ["stops", tripId],
@@ -84,7 +165,7 @@ export default function MapPage() {
   })
 
   const createStop = useMutation({
-    mutationFn: (data: typeof newStop) =>
+    mutationFn: (data: { name: string; address: string; latitude: string; longitude: string; notes: string }) =>
       api.post(`/trips/${tripId}/stops`, {
         name: data.name,
         address: data.address || null,
@@ -95,7 +176,6 @@ export default function MapPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stops", tripId] })
       setShowAddForm(false)
-      setNewStop({ name: "", address: "", latitude: "", longitude: "", notes: "" })
       toast.success("Stop added!")
     },
     onError: () => toast.error("Failed to add stop"),
@@ -120,6 +200,34 @@ export default function MapPage() {
     },
     onError: () => toast.error("Failed to update stop"),
   })
+
+  const reorderStops = useMutation({
+    mutationFn: (stopIds: number[]) =>
+      api.put(`/trips/${tripId}/stops/reorder`, stopIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stops", tripId] })
+      toast.success("Stops reordered")
+    },
+    onError: () => toast.error("Failed to reorder stops"),
+  })
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id && stops) {
+      const oldIndex = stops.findIndex((s) => s.id === active.id)
+      const newIndex = stops.findIndex((s) => s.id === over.id)
+      const newStops = arrayMove(stops, oldIndex, newIndex)
+      reorderStops.mutate(newStops.map((s) => s.id))
+    }
+  }
 
   const handleEditGeocode = async () => {
     if (!editingStop?.address) {
@@ -146,63 +254,11 @@ export default function MapPage() {
     }
   }
 
-  const handleGeocode = async () => {
-    if (!newStop.address) {
-      toast.error("Enter an address to geocode")
-      return
-    }
-    setIsGeocoding(true)
-    try {
-      const coords = await geocodeAddress(newStop.address)
-      if (coords) {
-        setNewStop({
-          ...newStop,
-          latitude: coords.lat.toString(),
-          longitude: coords.lng.toString(),
-        })
-        toast.success("Address found!")
-      } else {
-        toast.error("Address not found. Try a more specific address.")
-      }
-    } catch {
-      toast.error("Failed to geocode address")
-    } finally {
-      setIsGeocoding(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Auto-geocode if address provided but no coordinates
-    if (newStop.address && (!newStop.latitude || !newStop.longitude)) {
-      setIsGeocoding(true)
-      try {
-        const coords = await geocodeAddress(newStop.address)
-        if (coords) {
-          const updatedStop = {
-            ...newStop,
-            latitude: coords.lat.toString(),
-            longitude: coords.lng.toString(),
-          }
-          createStop.mutate(updatedStop)
-          toast.success("Address found and stop added!")
-        } else {
-          toast.error("Address not found. Try a more specific address or enter coordinates manually.")
-        }
-      } catch {
-        toast.error("Failed to geocode address")
-      } finally {
-        setIsGeocoding(false)
-      }
-    } else {
-      createStop.mutate(newStop)
-    }
-  }
-
   const defaultCenter: [number, number] = [39.8283, -98.5795]
-  const mapCenter = stops && stops.length > 0 && stops[0].latitude && stops[0].longitude
-    ? [stops[0].latitude, stops[0].longitude] as [number, number]
+
+  const validStops = stops?.filter((s) => s.latitude != null && s.longitude != null) ?? []
+  const mapCenter = validStops.length > 0 
+    ? [validStops[0].latitude!, validStops[0].longitude!] as [number, number]
     : defaultCenter
 
   if (isLoading) {
@@ -232,86 +288,12 @@ export default function MapPage() {
               <CardTitle>Add New Stop</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={newStop.name}
-                      onChange={(e) => setNewStop({ ...newStop, name: e.target.value })}
-                      placeholder="Stop name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="address"
-                        value={newStop.address}
-                        onChange={(e) => setNewStop({ ...newStop, address: e.target.value })}
-                        placeholder="Address"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleGeocode}
-                        disabled={isGeocoding || !newStop.address}
-                        title="Geocode address to get coordinates"
-                      >
-                        {isGeocoding ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <MapPin className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="latitude">Latitude</Label>
-                    <Input
-                      id="latitude"
-                      type="number"
-                      step="any"
-                      value={newStop.latitude}
-                      onChange={(e) => setNewStop({ ...newStop, latitude: e.target.value })}
-                      placeholder="39.8283"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="longitude">Longitude</Label>
-                    <Input
-                      id="longitude"
-                      type="number"
-                      step="any"
-                      value={newStop.longitude}
-                      onChange={(e) => setNewStop({ ...newStop, longitude: e.target.value })}
-                      placeholder="-98.5795"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={newStop.notes}
-                    onChange={(e) => setNewStop({ ...newStop, notes: e.target.value })}
-                    placeholder="Notes about this stop"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={createStop.isPending}>
-                    {createStop.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-                    Add Stop
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+              <StopForm
+                onSubmit={(data) => createStop.mutate(data)}
+                onCancel={() => setShowAddForm(false)}
+                isPending={createStop.isPending}
+                submitLabel="Add Stop"
+              />
             </CardContent>
           </Card>
         )}
@@ -322,7 +304,7 @@ export default function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapUpdater center={mapCenter} />
+            <MapBoundsUpdater stops={stops ?? []} />
             {stops?.map((stop) => {
               if (!stop.latitude || !stop.longitude) return null
               return (
@@ -348,41 +330,27 @@ export default function MapPage() {
         {stops && stops.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Stops ({stops.length})</h2>
-            <div className="grid gap-2">
-              {stops.map((stop) => (
-                <Card key={stop.id} className="p-4">
-<div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <GripVertical className="size-4 text-foreground-muted" />
-                        <div>
-                          <h3 className="font-medium">{stop.name}</h3>
-                          {stop.address && <p className="text-sm text-foreground-muted">{stop.address}</p>}
-                          {!stop.latitude && !stop.longitude && (
-                            <p className="text-xs text-amber-500 mt-1">No coordinates - click edit to add</p>
-                          )}
-                          {stop.notes && <p className="text-sm text-foreground-muted mt-1">{stop.notes}</p>}
-                        </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingStop(stop)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteStop.mutate(stop.id)}
-                        >
-                          <Trash2 className="size-4 text-danger" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={stops.map((s) => s.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid gap-2">
+                  {stops.map((stop) => (
+                    <SortableStop
+                      key={stop.id}
+                      stop={stop}
+                      onEdit={() => setEditingStop(stop)}
+                      onDelete={() => deleteStop.mutate(stop.id)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         )}
 
