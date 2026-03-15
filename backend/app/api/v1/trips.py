@@ -248,6 +248,7 @@ async def get_trip_members(
             "id": m.user.id,
             "display_name": m.user.display_name,
             "avatar_url": m.user.avatar_url,
+            "emoji": m.user.emoji,
             "role": m.role,
         }
         for m in trip.members

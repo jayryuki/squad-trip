@@ -10,6 +10,7 @@ Pages use shared components from `@/components/common/`:
 - `CreatorTag` - Shows which user created an item
 - `EmptyState` - Empty state with icon, title, action
 - `StopForm` - Form for adding/editing Map stops (used by MapPage and ItineraryPage)
+- `EditCarDialog` - Modal for editing car details (color, make/model, seats, driver)
 
 ## Authentication Pages
 
@@ -34,7 +35,8 @@ Pages use shared components from `@/components/common/`:
 |------|------|-------------|
 | `MapPage.tsx` | `/trips/:tripId/map` | Interactive map with Leaflet, draggable stops, auto-fit to show all stops |
 | `ItineraryPage.tsx` | `/trips/:tripId/itinerary` | Day-by-day activity planning, linked to Map stops |
-| `PackingPage.tsx` | `/trips/:tripId/packing` | Shared packing list with categories |
+| `TransportPage.tsx` | `/trips/:tripId/transport` | Car/transport management with drag-and-drop passenger assignment, waiting area |
+| `PackingPage.tsx` | `/trips/:tripId/packing` | Packing list with General (public) and Personal (private/shared) tabs, visibility controls, search, checkbox restrictions |
 | `BudgetPage.tsx` | `/trips/:tripId/budget` | Expense tracking and splitting |
 | `OutfitsPage.tsx` | `/trips/:tripId/outfits` | Outfit planning with images |
 | `MoodboardPage.tsx` | `/trips/:tripId/moodboard` | Inspiration image board |

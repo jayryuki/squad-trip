@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useParams } from "react-router-dom"
 import { 
-  Home, Map, Calendar, Users, Luggage, DollarSign, 
+  Home, Map, Calendar, Car, Luggage, DollarSign, 
   Shirt, Images, MessageSquare, Vote, Cloud, FileText, 
   Shield, Camera, LogOut, User 
 } from "lucide-react"
@@ -16,7 +16,7 @@ const mainNav = [
 const tripNav = [
   { to: "map", icon: Map, label: "Map" },
   { to: "itinerary", icon: Calendar, label: "Itinerary" },
-  { to: "roles", icon: Users, label: "Roles" },
+  { to: "transport", icon: Car, label: "Transport" },
   { to: "packing", icon: Luggage, label: "Packing" },
   { to: "budget", icon: DollarSign, label: "Budget" },
   { to: "outfits", icon: Shirt, label: "Outfits" },

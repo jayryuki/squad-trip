@@ -34,6 +34,7 @@ backend/
     │       ├── stops.py
     │       ├── itinerary.py
     │       ├── roles.py
+    │       ├── cars.py
     │       ├── packing.py
     │       ├── budget.py
     │       ├── outfits.py
@@ -55,6 +56,7 @@ backend/
     │   ├── stop.py
     │   ├── itinerary.py
     │   ├── role.py
+    │   ├── car.py
     │   ├── packing.py
     │   ├── expense.py
     │   ├── outfit.py
@@ -81,7 +83,8 @@ backend/
 | Stop | Trip destinations/stops with coordinates |
 | ItineraryItem | Scheduled activities with date/time/location |
 | Role | Trip responsibilities (driver, cook, navigator) |
-| PackingItem | Shared packing list items |
+| Car | Trip transport (driver, passengers, color, make, model, seats) |
+| PackingItem | Packing list items with visibility controls (public/shared/private), creator tracking |
 | Expense | Trip expenses with split tracking |
 | Outfit | Planned outfits with images |
 | MoodboardItem | Inspirational images |
@@ -102,11 +105,12 @@ All endpoints are prefixed with `/api/v1`.
 | Auth | POST /register, POST /login, POST/refresh, GET /me |
 | Users | GET/PATCH /users/me, GET /users/{id}/profile |
 | Badges | GET /badges, POST /badges/seed |
-| Trips | GET/POST /trips, GET/PUT/DELETE /trips/{id}, POST /trips/join/{code} |
+| Trips | GET/POST /trips, GET/PUT/DELETE /trips/{id}, POST /trips/join/{code}, GET /trips/{id}/members |
 | Stops | CRUD at /trips/{id}/stops |
 | Itinerary | CRUD at /trips/{id}/itinerary |
 | Roles | CRUD at /trips/{id}/roles |
-| Packing | CRUD at /trips/{id}/packing |
+| Cars | CRUD + join/leave + add/remove passengers at /trips/{id}/cars |
+| Packing | CRUD at /trips/{id}/packing, GET /trips/{id}/packing/search |
 | Budget | CRUD at /trips/{id}/expenses, GET /summary |
 | Outfits | CRUD at /trips/{id}/outfits |
 | Moodboard | CRUD at /trips/{id}/moodboard |

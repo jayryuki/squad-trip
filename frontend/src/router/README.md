@@ -28,7 +28,7 @@ React Router v6 setup with lazy loading and route protection.
 | `/trips/:tripId` | TripDashboardPage | Trip overview |
 | `/trips/:tripId/map` | MapPage | Interactive map with auto-fit to show all stops |
 | `/trips/:tripId/itinerary` | ItineraryPage | Day-by-day planning |
-| `/trips/:tripId/roles` | RolesPage | Trip roles |
+| `/trips/:tripId/transport` | TransportPage | Car/transport management for the trip |
 | `/trips/:tripId/packing` | PackingPage | Packing list |
 | `/trips/:tripId/budget` | BudgetPage | Expense tracking |
 | `/trips/:tripId/outfits` | OutfitsPage | Outfit planning |

@@ -34,6 +34,7 @@ components/
 | `FeatureCard.tsx` | Icon-based navigation card for dashboard grid |
 | `ListCard.tsx` | Reusable list item card with title, subtitle, image, actions |
 | `StopForm.tsx` | Form for adding/editing Map stops with geocoding |
+| `EditCarDialog.tsx` | Modal dialog for editing car details (color, make/model, seats, driver transfer) |
 
 ## UI Components (`ui/`)
 

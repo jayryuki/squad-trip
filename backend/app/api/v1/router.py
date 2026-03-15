@@ -5,6 +5,7 @@ from app.api.v1 import (
     stops,
     itinerary,
     roles,
+    cars,
     packing,
     budget,
     outfits,
@@ -30,6 +31,7 @@ api_router.include_router(
     itinerary.router, prefix="/trips/{trip_id}/itinerary", tags=["itinerary"]
 )
 api_router.include_router(roles.router, prefix="/trips/{trip_id}/roles", tags=["roles"])
+api_router.include_router(cars.router, prefix="/trips/{trip_id}/cars", tags=["cars"])
 api_router.include_router(
     packing.router, prefix="/trips/{trip_id}/packing", tags=["packing"]
 )

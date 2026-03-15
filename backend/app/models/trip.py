@@ -32,6 +32,7 @@ class Trip(Base):
     stops = relationship("Stop", back_populates="trip")
     itinerary_items = relationship("ItineraryItem", back_populates="trip")
     roles = relationship("Role", back_populates="trip")
+    cars = relationship("Car", back_populates="trip")
     packing_items = relationship("PackingItem", back_populates="trip")
     expenses = relationship("Expense", back_populates="trip")
     outfits = relationship("Outfit", back_populates="trip")

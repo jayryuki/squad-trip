@@ -61,9 +61,9 @@ const router = createBrowserRouter([
           Component: (await import("@/pages/ItineraryPage")).default 
         }) 
       },
-      { path: "/trips/:tripId/roles", 
+      { path: "/trips/:tripId/transport", 
         lazy: async () => ({ 
-          Component: (await import("@/pages/RolesPage")).default 
+          Component: (await import("@/pages/TransportPage")).default 
         }) 
       },
       { path: "/trips/:tripId/packing", 

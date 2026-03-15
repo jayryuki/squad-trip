@@ -1,5 +1,5 @@
 import { NavLink, useParams } from "react-router-dom"
-import { Home, Map, Calendar, Users } from "lucide-react"
+import { Home, Map, Calendar, Car } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -14,7 +14,7 @@ export default function BottomNav() {
     return [
       { to: `/trips/${tripId}/map`, icon: Map, label: "Map" },
       { to: `/trips/${tripId}/itinerary`, icon: Calendar, label: "Plan" },
-      { to: `/trips/${tripId}/roles`, icon: Users, label: "Roles" },
+      { to: `/trips/${tripId}/transport`, icon: Car, label: "Transport" },
     ]
   }
 

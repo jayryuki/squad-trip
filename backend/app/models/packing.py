@@ -16,6 +16,10 @@ class PackingItem(Base):
     is_packed = Column(Boolean, default=False)
     assigned_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     is_shared = Column(Boolean, default=True)
+    visibility = Column(String, default="public")  # 'public' | 'shared' | 'private'
+    visible_to = Column(
+        String, default="[]"
+    )  # JSON array of user IDs for 'shared' visibility
     created_at = Column(DateTime, default=datetime.utcnow)
 
     trip = relationship("Trip", back_populates="packing_items")

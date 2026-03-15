@@ -16,7 +16,7 @@ A full-stack trip planning application for groups. Plan trips together with feat
 - **Map** - Interactive trip map with stops
 - **Itinerary** - Day-by-day activity planning
 - **Roles** - Assign trip responsibilities (driver, cook, etc.)
-- **Packing** - Shared packing lists
+- **Packing** - General and personal packing lists with visibility controls
 - **Budget** - Expense tracking and splitting
 - **Outfits** - Outfit planning
 - **Moodboard** - Inspiration images
