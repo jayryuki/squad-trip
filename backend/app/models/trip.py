@@ -42,6 +42,15 @@ class Trip(Base):
     documents = relationship("Document", back_populates="trip")
     safety_info = relationship("SafetyInfo", back_populates="trip")
     photos = relationship("Photo", back_populates="trip")
+    user_moodboards = relationship("UserMoodboard", back_populates="trip")
+
+
+class TripSettings(Base):
+    __tablename__ = "trip_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False, unique=True)
+    moodboard_thumbnail_threshold = Column(Integer, default=20)
 
 
 class TripMember(Base):

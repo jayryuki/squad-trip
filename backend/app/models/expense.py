@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
+import json
 
 
 class Expense(Base):
@@ -20,3 +21,20 @@ class Expense(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     trip = relationship("Trip", back_populates="expenses")
+
+    def get_split_with(self) -> list[int]:
+        if not self.split_details:
+            return []
+        try:
+            data = json.loads(self.split_details)
+            if self.split_type == "equal":
+                return data.get("users", [])
+            return list(data.get("shares", {}).keys())
+        except (json.JSONDecodeError, AttributeError):
+            return []
+
+    def is_shared_with(self, user_id: int) -> bool:
+        split_with = self.get_split_with()
+        if not split_with:
+            return True
+        return user_id in split_with

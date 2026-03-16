@@ -8,8 +8,14 @@ from app.api.deps import get_current_user, get_trip_member
 from app.models.user import User
 from app.models.trip import TripMember
 from app.models.expense import Expense
+import json
 
 router = APIRouter()
+
+
+class SplitShare(BaseModel):
+    user_id: int
+    amount: float
 
 
 class ExpenseCreateRequest(BaseModel):
@@ -18,7 +24,8 @@ class ExpenseCreateRequest(BaseModel):
     currency: str = "USD"
     paid_by_user_id: int
     split_type: str = "equal"
-    split_details: Optional[str] = None
+    split_with: Optional[list[int]] = None
+    split_shares: Optional[dict[str, float]] = None
     category: Optional[str] = None
 
 
@@ -28,7 +35,8 @@ class ExpenseUpdateRequest(BaseModel):
     currency: Optional[str] = None
     paid_by_user_id: Optional[int] = None
     split_type: Optional[str] = None
-    split_details: Optional[str] = None
+    split_with: Optional[list[int]] = None
+    split_shares: Optional[dict[str, float]] = None
     category: Optional[str] = None
 
 
@@ -40,11 +48,41 @@ class ExpenseResponse(BaseModel):
     paid_by_user_id: int
     creator_id: Optional[int] = None
     split_type: str
-    split_details: Optional[str]
+    split_with: Optional[list[int]]
+    split_shares: Optional[dict[str, float]]
     category: Optional[str]
+    created_at: str
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm_with_split(cls, expense: Expense):
+        split_with = []
+        split_shares = None
+        if expense.split_details:
+            try:
+                data = json.loads(expense.split_details)
+                if expense.split_type == "equal":
+                    split_with = data.get("users", [])
+                else:
+                    split_shares = data.get("shares", {})
+            except json.JSONDecodeError:
+                pass
+
+        return cls(
+            id=expense.id,
+            title=expense.title,
+            amount=expense.amount,
+            currency=expense.currency,
+            paid_by_user_id=expense.paid_by_user_id,
+            creator_id=expense.creator_id,
+            split_type=expense.split_type,
+            split_with=split_with if split_with else None,
+            split_shares=split_shares,
+            category=expense.category,
+            created_at=expense.created_at.isoformat() if expense.created_at else "",
+        )
 
 
 class BudgetSummaryResponse(BaseModel):
@@ -60,9 +98,14 @@ async def list_expenses(
     db: AsyncSession = Depends(get_db),
     member: TripMember = Depends(get_trip_member),
 ):
+    user_id = member.user_id
     result = await db.execute(select(Expense).where(Expense.trip_id == trip_id))
     expenses = result.scalars().all()
-    return [ExpenseResponse.model_validate(e) for e in expenses]
+
+    filtered = [
+        e for e in expenses if e.is_shared_with(user_id) or e.paid_by_user_id == user_id
+    ]
+    return [ExpenseResponse.from_orm_with_split(e) for e in filtered]
 
 
 @router.get("/summary", response_model=BudgetSummaryResponse)
@@ -71,15 +114,20 @@ async def get_budget_summary(
     db: AsyncSession = Depends(get_db),
     member: TripMember = Depends(get_trip_member),
 ):
+    user_id = member.user_id
     result = await db.execute(select(Expense).where(Expense.trip_id == trip_id))
     expenses = result.scalars().all()
 
-    total = sum(e.amount for e in expenses)
+    filtered = [
+        e for e in expenses if e.is_shared_with(user_id) or e.paid_by_user_id == user_id
+    ]
+
+    total = sum(e.amount for e in filtered)
     currency = "USD"
     by_user: dict[int, float] = {}
     by_category: dict[str, float] = {}
 
-    for e in expenses:
+    for e in filtered:
         by_user[e.paid_by_user_id] = by_user.get(e.paid_by_user_id, 0) + e.amount
         if e.category:
             by_category[e.category] = by_category.get(e.category, 0) + e.amount
@@ -99,6 +147,13 @@ async def create_expense(
     db: AsyncSession = Depends(get_db),
     member: TripMember = Depends(get_trip_member),
 ):
+    split_details = None
+    if req.split_type == "equal":
+        if req.split_with:
+            split_details = json.dumps({"users": req.split_with})
+    elif req.split_type == "custom" and req.split_shares:
+        split_details = json.dumps({"shares": req.split_shares})
+
     expense = Expense(
         trip_id=trip_id,
         creator_id=member.user_id,
@@ -107,13 +162,13 @@ async def create_expense(
         currency=req.currency,
         paid_by_user_id=req.paid_by_user_id,
         split_type=req.split_type,
-        split_details=req.split_details,
+        split_details=split_details,
         category=req.category,
     )
     db.add(expense)
     await db.commit()
     await db.refresh(expense)
-    return ExpenseResponse.model_validate(expense)
+    return ExpenseResponse.from_orm_with_split(expense)
 
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)
@@ -141,14 +196,16 @@ async def update_expense(
         expense.paid_by_user_id = req.paid_by_user_id
     if req.split_type is not None:
         expense.split_type = req.split_type
-    if req.split_details is not None:
-        expense.split_details = req.split_details
+        if req.split_type == "equal" and req.split_with:
+            expense.split_details = json.dumps({"users": req.split_with})
+        elif req.split_type == "custom" and req.split_shares:
+            expense.split_details = json.dumps({"shares": req.split_shares})
     if req.category is not None:
         expense.category = req.category
 
     await db.commit()
     await db.refresh(expense)
-    return ExpenseResponse.model_validate(expense)
+    return ExpenseResponse.from_orm_with_split(expense)
 
 
 @router.delete("/{expense_id}")

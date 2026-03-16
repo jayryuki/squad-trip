@@ -9,7 +9,7 @@ import uuid
 from app.core.database import get_db
 from app.api.deps import get_current_user, get_trip_member
 from app.models.user import User
-from app.models.trip import Trip, TripMember
+from app.models.trip import Trip, TripMember, TripSettings
 from app.models.stop import Stop
 from app.models.itinerary import ItineraryItem
 from app.models.role import Role
@@ -17,6 +17,7 @@ from app.models.packing import PackingItem
 from app.models.expense import Expense
 from app.models.outfit import Outfit
 from app.models.moodboard import MoodboardItem
+from app.models.user_moodboard import UserMoodboard
 from app.models.chat import Message
 from app.models.poll import Poll
 from app.models.document import Document
@@ -275,12 +276,71 @@ async def delete_trip(
     await db.execute(delete(Expense).where(Expense.trip_id == trip_id))
     await db.execute(delete(Outfit).where(Outfit.trip_id == trip_id))
     await db.execute(delete(MoodboardItem).where(MoodboardItem.trip_id == trip_id))
+    await db.execute(delete(UserMoodboard).where(UserMoodboard.trip_id == trip_id))
     await db.execute(delete(Message).where(Message.trip_id == trip_id))
     await db.execute(delete(Poll).where(Poll.trip_id == trip_id))
     await db.execute(delete(Document).where(Document.trip_id == trip_id))
     await db.execute(delete(SafetyInfo).where(SafetyInfo.trip_id == trip_id))
     await db.execute(delete(Photo).where(Photo.trip_id == trip_id))
+    await db.execute(delete(TripSettings).where(TripSettings.trip_id == trip_id))
 
     await db.delete(trip)
     await db.commit()
     return {"message": "Trip deleted"}
+
+
+class TripSettingsResponse(BaseModel):
+    trip_id: int
+    moodboard_thumbnail_threshold: int
+
+
+class TripSettingsUpdate(BaseModel):
+    moodboard_thumbnail_threshold: Optional[int] = None
+
+
+@router.get("/{trip_id}/settings", response_model=TripSettingsResponse)
+async def get_trip_settings(
+    trip_id: int,
+    db: AsyncSession = Depends(get_db),
+    member: TripMember = Depends(get_trip_member),
+):
+    result = await db.execute(
+        select(TripSettings).where(TripSettings.trip_id == trip_id)
+    )
+    settings = result.scalar_one_or_none()
+
+    if not settings:
+        settings = TripSettings(trip_id=trip_id, moodboard_thumbnail_threshold=20)
+        db.add(settings)
+        await db.commit()
+        await db.refresh(settings)
+
+    return TripSettingsResponse.model_validate(settings)
+
+
+@router.put("/{trip_id}/settings", response_model=TripSettingsResponse)
+async def update_trip_settings(
+    trip_id: int,
+    req: TripSettingsUpdate,
+    db: AsyncSession = Depends(get_db),
+    member: TripMember = Depends(get_trip_member),
+):
+    if member.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update settings")
+
+    result = await db.execute(
+        select(TripSettings).where(TripSettings.trip_id == trip_id)
+    )
+    settings = result.scalar_one_or_none()
+
+    if not settings:
+        settings = TripSettings(trip_id=trip_id, moodboard_thumbnail_threshold=20)
+        db.add(settings)
+
+    if req.moodboard_thumbnail_threshold is not None:
+        settings.moodboard_thumbnail_threshold = req.moodboard_thumbnail_threshold
+
+    await db.commit()
+    await db.refresh(settings)
+
+    return TripSettingsResponse.model_validate(settings)

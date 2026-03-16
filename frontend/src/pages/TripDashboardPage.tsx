@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
-import { Map, Calendar, Car, Luggage, DollarSign, Shirt, Images, MessageSquare, Vote, Cloud, FileText, Shield, Camera, Loader2, Share2, Settings } from "lucide-react"
+import { Map, Calendar, Car, Luggage, DollarSign, Images, MessageSquare, Vote, Cloud, FileText, Shield, Camera, Loader2, Share2, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import PageWrapper from "@/components/layout/PageWrapper"
 import FeatureCard from "@/components/common/FeatureCard"
@@ -12,7 +12,6 @@ const features = [
   { icon: Car, label: "Transport", path: "transport", color: "text-purple-500" },
   { icon: Luggage, label: "Packing", path: "packing", color: "text-orange-500" },
   { icon: DollarSign, label: "Budget", path: "budget", color: "text-green-400" },
-  { icon: Shirt, label: "Outfits", path: "outfits", color: "text-pink-500" },
   { icon: Images, label: "Moodboard", path: "moodboard", color: "text-yellow-500" },
   { icon: MessageSquare, label: "Chat", path: "chat", color: "text-indigo-500" },
   { icon: Vote, label: "Polls", path: "polls", color: "text-cyan-500" },
@@ -62,7 +61,7 @@ export default function TripDashboardPage() {
             <Share2 className="mr-2 size-4" />
             Share
           </Button>
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={() => navigate(`/trips/${tripId}/settings`)}>
             <Settings className="mr-2 size-4" />
             Settings
           </Button>

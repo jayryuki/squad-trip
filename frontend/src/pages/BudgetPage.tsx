@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2, Plus, Trash2, DollarSign } from "lucide-react"
+import { Loader2, Plus, Trash2, DollarSign, Users, UserCheck, Percent } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,6 +19,8 @@ interface Expense {
   paid_by_user_id: number
   creator_id: number | null
   split_type: string
+  split_with: number[] | null
+  split_shares: Record<string, number> | null
   category: string | null
 }
 
@@ -36,10 +38,15 @@ interface BudgetSummary {
 
 const CATEGORIES = ["food", "transport", "accommodation", "activities", "other"]
 
+type SplitType = "everyone" | "specific" | "custom"
+
 export default function BudgetPage() {
   const { tripId } = useParams()
   const queryClient = useQueryClient()
   const [showAddForm, setShowAddForm] = useState(false)
+  const [splitType, setSplitType] = useState<SplitType>("everyone")
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([])
+  const [customShares, setCustomShares] = useState<Record<number, string>>({})
   const [newExpense, setNewExpense] = useState({
     title: "",
     amount: "",
@@ -63,18 +70,44 @@ export default function BudgetPage() {
   })
 
   const createExpense = useMutation({
-    mutationFn: () =>
-      api.post(`/trips/${tripId}/expenses`, {
+    mutationFn: () => {
+      let split_type = "equal"
+      let split_with: number[] | undefined = undefined
+      let split_shares: Record<string, number> | undefined = undefined
+
+      if (splitType === "specific") {
+        split_with = selectedUsers
+      } else if (splitType === "custom") {
+        split_type = "custom"
+        const shares: Record<string, number> = {}
+        Object.entries(customShares).forEach(([userId, amount]) => {
+          if (amount && parseFloat(amount) > 0) {
+            shares[userId] = parseFloat(amount)
+          }
+        })
+        if (Object.keys(shares).length > 0) {
+          split_shares = shares
+        }
+      }
+
+      return api.post(`/trips/${tripId}/expenses`, {
         title: newExpense.title,
         amount: parseFloat(newExpense.amount),
         paid_by_user_id: parseInt(newExpense.paid_by_user_id),
         category: newExpense.category,
-      }),
+        split_type,
+        split_with: split_with || null,
+        split_shares: split_shares || null,
+      })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses", tripId] })
       queryClient.invalidateQueries({ queryKey: ["expensesSummary", tripId] })
       setShowAddForm(false)
       setNewExpense({ title: "", amount: "", paid_by_user_id: "", category: "other" })
+      setSplitType("everyone")
+      setSelectedUsers([])
+      setCustomShares({})
       toast.success("Expense added!")
     },
     onError: () => toast.error("Failed to add expense"),
@@ -95,8 +128,35 @@ export default function BudgetPage() {
     createExpense.mutate()
   }
 
+  const handleUserToggle = (userId: number) => {
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    )
+  }
+
+  const handleCustomShareChange = (userId: number, value: string) => {
+    setCustomShares((prev) => ({ ...prev, [userId]: value }))
+  }
+
   const getMemberName = (userId: number) => {
     return members?.find((m) => m.id === userId)?.display_name || "Unknown"
+  }
+
+  const getSplitInfo = (expense: Expense) => {
+    if (expense.split_type === "custom" && expense.split_shares) {
+      const count = Object.keys(expense.split_shares).length
+      return `Custom split (${count} people)`
+    }
+    if (expense.split_with && expense.split_with.length > 0) {
+      return `Split with ${expense.split_with.length} people`
+    }
+    return "Split with everyone"
+  }
+
+  const resetSplitForm = () => {
+    setSplitType("everyone")
+    setSelectedUsers([])
+    setCustomShares({})
   }
 
   if (isLoading) {
@@ -204,6 +264,109 @@ export default function BudgetPage() {
                     </select>
                   </div>
                 </div>
+
+                <div className="space-y-3 pt-2">
+                  <Label>Split With</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="splitType"
+                        checked={splitType === "everyone"}
+                        onChange={() => resetSplitForm()}
+                        className="accent-brand"
+                      />
+                      <Users className="size-4" />
+                      Everyone
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="splitType"
+                        checked={splitType === "specific"}
+                        onChange={() => setSplitType("specific")}
+                        className="accent-brand"
+                      />
+                      <UserCheck className="size-4" />
+                      Specific users
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="splitType"
+                        checked={splitType === "custom"}
+                        onChange={() => setSplitType("custom")}
+                        className="accent-brand"
+                      />
+                      <Percent className="size-4" />
+                      Custom
+                    </label>
+                  </div>
+
+                  {splitType === "specific" && (
+                    <div className="mt-3 p-3 border rounded-lg space-y-2">
+                      <p className="text-sm text-foreground-muted">Select who to split with:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {members?.map((member) => (
+                          <label
+                            key={member.id}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                              selectedUsers.includes(member.id)
+                                ? "bg-brand/20 border-brand text-brand"
+                                : "border-border hover:border-brand/50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedUsers.includes(member.id)}
+                              onChange={() => handleUserToggle(member.id)}
+                              className="sr-only"
+                            />
+                            {member.display_name}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {splitType === "custom" && (
+                    <div className="mt-3 p-3 border rounded-lg space-y-3">
+                      <p className="text-sm text-foreground-muted">Enter amount each person owes:</p>
+                      {members?.map((member) => (
+                        <div key={member.id} className="flex items-center gap-2">
+                          <span className="w-24 text-sm">{member.display_name}</span>
+                          <span className="text-foreground-muted">$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={customShares[member.id] || ""}
+                            onChange={(e) => handleCustomShareChange(member.id, e.target.value)}
+                            className="w-28"
+                          />
+                        </div>
+                      ))}
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-foreground-muted">Total:</span>
+                          <span className="font-medium">
+                            $
+                            {Object.values(customShares)
+                              .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+                              .toFixed(2)}
+                          </span>
+                        </div>
+                        {newExpense.amount && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-foreground-muted">Expense amount:</span>
+                            <span>${parseFloat(newExpense.amount).toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2">
                   <Button type="submit" disabled={createExpense.isPending}>
                     {createExpense.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
@@ -230,7 +393,8 @@ export default function BudgetPage() {
                     </div>
                     <p className="text-sm text-foreground-muted">
                       Paid by {getMemberName(expense.paid_by_user_id)} ·{" "}
-                      <span className="capitalize">{expense.category || "other"}</span>
+                      <span className="capitalize">{expense.category || "other"}</span> ·{" "}
+                      <span className="text-brand">{getSplitInfo(expense)}</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

@@ -76,11 +76,6 @@ const router = createBrowserRouter([
           Component: (await import("@/pages/BudgetPage")).default 
         }) 
       },
-      { path: "/trips/:tripId/outfits", 
-        lazy: async () => ({ 
-          Component: (await import("@/pages/OutfitsPage")).default 
-        }) 
-      },
       { path: "/trips/:tripId/moodboard", 
         lazy: async () => ({ 
           Component: (await import("@/pages/MoodboardPage")).default 
@@ -114,6 +109,11 @@ const router = createBrowserRouter([
       { path: "/trips/:tripId/photos", 
         lazy: async () => ({ 
           Component: (await import("@/pages/PhotosPage")).default 
+        }) 
+      },
+      { path: "/trips/:tripId/settings", 
+        lazy: async () => ({ 
+          Component: (await import("@/pages/TripSettingsPage")).default 
         }) 
       },
     ],

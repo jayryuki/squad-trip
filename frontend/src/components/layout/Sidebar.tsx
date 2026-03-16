@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useParams } from "react-router-dom"
 import { 
   Home, Map, Calendar, Car, Luggage, DollarSign, 
-  Shirt, Images, MessageSquare, Vote, Cloud, FileText, 
+  Images, MessageSquare, Vote, Cloud, FileText, 
   Shield, Camera, LogOut, User 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,6 @@ const tripNav = [
   { to: "transport", icon: Car, label: "Transport" },
   { to: "packing", icon: Luggage, label: "Packing" },
   { to: "budget", icon: DollarSign, label: "Budget" },
-  { to: "outfits", icon: Shirt, label: "Outfits" },
   { to: "moodboard", icon: Images, label: "Moodboard" },
   { to: "chat", icon: MessageSquare, label: "Chat" },
   { to: "polls", icon: Vote, label: "Polls" },
