@@ -20,6 +20,10 @@ class PackingItem(Base):
     visible_to = Column(
         String, default="[]"
     )  # JSON array of user IDs for 'shared' visibility
+    list_name = Column(String, nullable=True)  # For multiple personal lists
+    packed_status = Column(
+        String, default="{}"
+    )  # JSON object: {user_id: true/false} for per-user packed status
     created_at = Column(DateTime, default=datetime.utcnow)
 
     trip = relationship("Trip", back_populates="packing_items")

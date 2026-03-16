@@ -36,7 +36,7 @@ Pages use shared components from `@/components/common/`:
 | `MapPage.tsx` | `/trips/:tripId/map` | Interactive map with Leaflet, draggable stops, auto-fit to show all stops |
 | `ItineraryPage.tsx` | `/trips/:tripId/itinerary` | Day-by-day activity planning, linked to Map stops |
 | `TransportPage.tsx` | `/trips/:tripId/transport` | Car/transport management with drag-and-drop passenger assignment, waiting area |
-| `PackingPage.tsx` | `/trips/:tripId/packing` | Packing list with General (public) and Personal (private/shared) tabs, visibility controls, search, checkbox restrictions |
+| `PackingPage.tsx` | `/trips/:tripId/packing` | Packing list with General (public) and Personal (private/shared) tabs, visibility controls, search, checkbox restrictions, bulk add items (comma/newline separated), custom categories (case-insensitive, title case display), inline category support (ItemName:Category) |
 | `BudgetPage.tsx` | `/trips/:tripId/budget` | Expense tracking and splitting |
 | `OutfitsPage.tsx` | `/trips/:tripId/outfits` | Outfit planning with images |
 | `MoodboardPage.tsx` | `/trips/:tripId/moodboard` | Inspiration image board |

@@ -19,14 +19,18 @@ import app.models.poll
 import app.models.document
 import app.models.safety
 import app.models.photo
+import app.models.car
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("+aiosqlite", ""))
+config.set_main_option(
+    "sqlalchemy.url", settings.DATABASE_URL.replace("+aiosqlite", "")
+)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
@@ -39,14 +43,17 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
     from sqlalchemy import create_engine
+
     engine = create_engine(settings.DATABASE_URL.replace("+aiosqlite", ""))
     with engine.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
     engine.dispose()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
